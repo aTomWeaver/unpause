@@ -9,48 +9,64 @@ def main():
         print("no args")
         return
     else:
-        args = argv[1:]
-    if not args[0] in CMDS:
-        print("not in commands")
+        command = argv[1]
+        if len(argv) > 2:
+            args = argv[2:]
+        else:
+            args = []
+    if command not in CMDS:
+        print(f"\"{command}\" not in commands.\n")
+        print_usage()
     else:
-        CMDS[args[0]]()
+        CMDS[args[0]](args)
 
 
-def list_projects():
+def list_projects(args):
     print("listing!")
 
 
-def add_project():
+def add_project(args):
     print("adding project!")
 
 
-def remove_project():
+def remove_project(args):
     print("removing")
 
 
-def update_project():
+def update_project(args):
     print("update")
 
 
-def edit_project():
+def edit_project(args):
     print("edit")
 
 
-def init_project():
+def init_project(args):
     print("init")
 
 
-def set_home():
+def set_home(args):
     print("setting home")
 
 
+def print_usage(args):
+    print("Usage: unpause [project-name | command] [args]")
+
 CMDS = {
         "list": list_projects,
+        "l": list_projects,
+        "ls": list_projects,
         "add": add_project,
+        "a": add_project,
         "remove": remove_project,
+        "rm": remove_project,
+        "r": remove_project,
         "update": update_project,
+        "u": update_project,
         "edit": edit_project,
+        "e": edit_project,
         "init": init_project,
+        "i": init_project,
         "set-home": set_home,
         }
 
