@@ -1,4 +1,4 @@
-import os
+from crud import read_projects_data, write_projects_data
 import shutil
 import subprocess
 from sys import argv
@@ -18,11 +18,14 @@ def main():
         print(f"\"{command}\" not in commands.\n")
         print_usage()
     else:
-        CMDS[args[0]](args)
+        CMDS[command](args)
 
 
 def list_projects(args):
     print("listing!")
+    projects_data = read_projects_data()
+    for project in projects_data:
+        print(project)
 
 
 def add_project(args):
@@ -51,6 +54,7 @@ def set_home(args):
 
 def print_usage(args):
     print("Usage: unpause [project-name | command] [args]")
+
 
 CMDS = {
         "list": list_projects,
