@@ -28,7 +28,7 @@ def make_project_dir(name):
 
 
 def write_script_file(script: str, path: str):
-    '''Write a script file given the script template and path.'''
+    '''Write a script file given the script template and file path.'''
     with open(path, 'w+') as file:
         file.write(script)
 
