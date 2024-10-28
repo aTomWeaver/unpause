@@ -95,7 +95,7 @@ class TmuxBuilder:
         self.num_windows = 0
         self.windows = {}
 
-    def add_window(self, name: str, layout: str, panes: list[str]):
+    def add_window(self, name: str, layout: str, panes: list[tuple[str, str]]):
         try:
             self.parent.add_var(name, self.num_windows)
         except VarExistsError:
@@ -113,13 +113,21 @@ class TmuxBuilder:
         window = self.windows[window_num]
         # if not first window, create window with first pane path
         if window_num > 0:
-            string += self.__new_window(window["name"], window["panes"][0])
+            string += self.__new_window(window["name"], window["panes"][0][0])
 
         string += self.__select_window(window["name"])
+        string += "\n"
         if not len(window["panes"]) > 1:
             return string
-        for pane in window["panes"][1:]:
-            string += self.__split_window(pane, direction="h")
+        for i, pane in enumerate(window["panes"]):
+            directory, command = pane
+            if i == 0:
+                string += self.__run_command(command)
+                string += "\n"
+            else:
+                string += self.__split_window(directory, direction="h")
+                string += self.__run_command(command)
+                string += "\n"
         string += self.__select_layout(window["layout"])
         return string
 
@@ -128,10 +136,13 @@ class TmuxBuilder:
         CLOSE_BRACE = "}"
         string = self.__attach_session() + " || "
         string += OPEN_BRACE + "\n"
-        if len(self.windows) > 1:
+        print(f"length of self.windows: {len(self.windows)}")
+        if len(self.windows) > 0:
             # Session with user-created windows
-            string += self.__new_session(self.windows[0]["panes"][0])
-            string += self.__rename_window(self.windows[0]["name"])
+            first_pane_dir = self.windows[0]["panes"][0][0]
+            first_pane_name = self.windows[0]["name"]
+            string += self.__new_session(first_pane_dir)
+            string += self.__rename_window(first_pane_name)
             for window in self.windows:
                 string += self.build_window(window)
                 string += "\n"
@@ -145,7 +156,7 @@ class TmuxBuilder:
         return string
 
     def __new_session(self, first_win_pane_dir: str = "~/"):
-        return f"\ttmux new-session -d -s $tx_session -c `realpath {first_win_pane_dir}`\n\n"
+        return f"\ttmux new-session -d -s $tx_session -c `realpath {first_win_pane_dir}`\n"
 
     def __attach_session(self, prefix: str = "", suffix: str = ""):
         return f"{prefix}tmux attach -t $tx_session{suffix}"
@@ -177,6 +188,9 @@ class TmuxBuilder:
             string += "\ttmux resize-pane -t 0 -x 50%\n"
         return string
 
+    def __run_command(self, command: str):
+        return f"\ttmux send-keys '{command}' C-m\n"
+
 
 def make_exec(fpath: str):
     subprocess.run(["chmod", "+x", fpath])
@@ -186,6 +200,11 @@ if __name__ == "__main__":
     # testing
     script = ScriptBuilder("sesh", "~/documents/")
     script.tmux_init()
+    script.tmux.add_window("win1", "main-vertical", [
+        ("~/code/", "nvim ."),
+        ("~", "pond.sh"),
+        ("~/pictures/", "cmatrix")
+        ])
     print(script.vars)
     with open("testing.sh", "w+") as file:
         file.write(script.to_string())
