@@ -94,6 +94,7 @@ class TmuxBuilder:
         self.name = parent.name
         self.num_windows = 0
         self.windows = {}
+        self.command_queue = []
 
     def add_window(self, name: str, layout: str, panes: list[tuple[str, str]]):
         try:
@@ -114,29 +115,23 @@ class TmuxBuilder:
         # if not first window, create window with first pane path
         if window_num > 0:
             string += self.__new_window(window["name"], window["panes"][0][0])
-
         string += self.__select_window(window["name"])
-        string += "\n"
-        if not len(window["panes"]) > 1:
-            return string
         for i, pane in enumerate(window["panes"]):
             directory, command = pane
-            if i == 0:
-                string += self.__run_command(command)
-                string += "\n"
-            else:
+            if command != "":
+                target = f"${window["name"]}.{i}"
+                self.command_queue.append((target, command))
+            if i > 0:
                 string += self.__split_window(directory, direction="h")
-                string += self.__run_command(command)
-                string += "\n"
         string += self.__select_layout(window["layout"])
         return string
 
     def to_string(self):
         OPEN_BRACE = "{"
         CLOSE_BRACE = "}"
+        SLEEP_INTERVAL = 0.3
         string = self.__attach_session() + " || "
         string += OPEN_BRACE + "\n"
-        print(f"length of self.windows: {len(self.windows)}")
         if len(self.windows) > 0:
             # Session with user-created windows
             first_pane_dir = self.windows[0]["panes"][0][0]
@@ -146,11 +141,14 @@ class TmuxBuilder:
             for window in self.windows:
                 string += self.build_window(window)
                 string += "\n"
-            string += self.__select_window(self.windows[0]["name"])
-            string += self.__select_pane(0)
         else:
             # Blank session
             string += self.__new_session()
+        string += f"\tsleep {SLEEP_INTERVAL}\n"
+        for target, command in self.command_queue:
+            string += self.__run_command(command, target=target)
+        string += self.__select_window(self.windows[0]["name"])
+        string += self.__select_pane(0)
         string += self.__attach_session(prefix="\t", suffix="\n")
         string += CLOSE_BRACE
         return string
@@ -188,8 +186,11 @@ class TmuxBuilder:
             string += "\ttmux resize-pane -t 0 -x 50%\n"
         return string
 
-    def __run_command(self, command: str):
-        return f"\ttmux send-keys '{command}' C-m\n"
+    def __run_command(self, command: str, target: str = ""):
+        if target:
+            return f"\ttmux send-keys -t {target} '{command}' C-m\n"
+        else:
+            return f"\ttmux send-keys '{command}' C-m\n"
 
 
 def make_exec(fpath: str):
@@ -200,10 +201,8 @@ if __name__ == "__main__":
     # testing
     script = ScriptBuilder("sesh", "~/documents/")
     script.tmux_init()
-    script.tmux.add_window("win1", "main-vertical", [
-        ("~/code/", "nvim ."),
-        ("~", "pond.sh"),
-        ("~/pictures/", "cmatrix")
+    script.tmux.add_window("win1", "even-horizontal", [
+        ("~/pictures/", "cmatrix"),
         ])
     print(script.vars)
     with open("testing.sh", "w+") as file:
