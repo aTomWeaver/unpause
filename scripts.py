@@ -1,4 +1,5 @@
 import subprocess
+from crud import write_file
 
 
 class VarExistsError(Exception):
@@ -17,20 +18,29 @@ class ScriptBuilder:
 
         self.tmux = None
         self.browser = None
+        self.url_queue = []
 
     def tmux_init(self):
         self.tmux = TmuxBuilder(self)
         self.add_var("tx_session", self.name)
 
-    def browser_init(self, kiosk_mode: bool = False):
-        self.browser = BrowserBuilder(self, kiosk_mode=kiosk_mode)
+    def browser_init(self, driver: str = "firefox", kiosk_mode: bool = False):
+        self.browser = BrowserBuilder(self, driver=driver, kiosk_mode=kiosk_mode)
+
+    def build(self):
+        if self.url_queue != []:
+            self.write_url_queue()
+        return self.to_string()
 
     def to_string(self):
         string = "#!/bin/bash\n\n"
         string += "### Variables\n"
         for var in self.vars:
             if type(self.vars[var]) is str:
-                string += f"{var}='{self.vars[var]}'\n"
+                if self.vars[var][0] == "`":
+                    string += f"{var}={self.vars[var]}\n"
+                else:
+                    string += f"{var}='{self.vars[var]}'\n"
             else:
                 string += f"{var}={self.vars[var]}\n"
         string += "\n"
@@ -48,6 +58,14 @@ class ScriptBuilder:
             return
         return self.browser.windows
 
+    def add_to_url_queue(self, var_name: str, url: str):
+        self.url_queue.append((var_name, url))
+
+    def write_url_queue(self):
+        for item in self.url_queue:
+            name, url = item
+            write_file(url, f"projects/{self.name}/{name}")
+
     def add_var(self, key, value):
         if key in self.vars:
             raise VarExistsError(key)
@@ -56,16 +74,23 @@ class ScriptBuilder:
 
 
 class BrowserBuilder:
-    def __init__(self, parent: ScriptBuilder, driver: str = "firefox", kiosk_mode=False):
+    def __init__(self,
+                 parent: ScriptBuilder,
+                 driver: str = "firefox",
+                 kiosk_mode=False):
         # currently only supporting firefox
         self.parent = parent
         self.driver = driver
         self.kiosk_mode = kiosk_mode
         self.num_windows = 0
         self.windows = {}
-        self.vars = {}
 
-    def add_window(self, tabs: list[str]):
+    def add_window(self, tabs: list[tuple[str, str]]):
+        for tab in tabs:
+            print(tab)
+            name, url = tab
+            self.parent.add_var(f"url_{name}", f"`cat ./url_{name}`")
+            self.parent.add_to_url_queue(f"url_{name}", url)
         self.windows[self.num_windows] = {
                 "tabs": tabs,
                 }
@@ -75,17 +100,21 @@ class BrowserBuilder:
         string = ""
         for window in self.windows:
             tabs = self.windows[window]["tabs"]
-            string += self.__new_window(tabs[0])
-            if not len(tabs) > 1:
-                return string
-            for tab in tabs[1:]:
-                string += self.__new_tab(tab)
+            string += self.__new_window(f"url_{tabs[0][0]}")
+            if len(tabs) > 1:
+                for tab in tabs[1:]:
+                    name, _ = tab
+                    string += self.__new_tab(f"url_{name}")
+        string += "\n"
+        return string
 
-    def __new_window(self, url: str):
-        return f"{self.driver} -new-window {url}\n"
+    def __new_window(self, var_name: str, kiosk: bool = False):
+        if kiosk:
+            return f"{self.driver} -new-window -kiosk ${var_name}\n"
+        return f"{self.driver} -new-window ${var_name}\n"
 
-    def __new_tab(self, url: str):
-        return f"{self.driver} -new-tab {url}\n"
+    def __new_tab(self, var_name: str):
+        return f"{self.driver} -new-tab ${var_name}\n"
 
 
 class TmuxBuilder:
@@ -144,9 +173,11 @@ class TmuxBuilder:
         else:
             # Blank session
             string += self.__new_session()
+        string += "\t# Commands\n"
         string += f"\tsleep {SLEEP_INTERVAL}\n"
         for target, command in self.command_queue:
             string += self.__run_command(command, target=target)
+        string += "\n"
         string += self.__select_window(self.windows[0]["name"])
         string += self.__select_pane(0)
         string += self.__attach_session(prefix="\t", suffix="\n")
@@ -201,9 +232,16 @@ if __name__ == "__main__":
     # testing
     script = ScriptBuilder("sesh", "~/documents/")
     script.tmux_init()
+    script.browser_init(driver="firefox", kiosk_mode=False)
+    script.browser.add_window([
+        ("youtube", "https://www.youtube.com"),
+        ("google", "https://www.google.com"),
+        ])
+    script.browser.add_window([
+        ("wikipedia", "https://en.wikipedia.org/wiki/Plus-Tech_Squeeze_Box"),
+        ])
     script.tmux.add_window("win1", "even-horizontal", [
         ("~/pictures/", "cmatrix"),
         ])
     print(script.vars)
-    with open("testing.sh", "w+") as file:
-        file.write(script.to_string())
+    write_file(script.build(), "projects/sesh/sesh.sh")
