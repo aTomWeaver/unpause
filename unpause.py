@@ -1,4 +1,6 @@
-from crud import read_projects_data, write_projects_data
+import os
+import crud
+from scripts import ScriptBuilder
 import shutil
 import subprocess
 from sys import argv
@@ -23,7 +25,7 @@ def main():
 
 def list_projects(args):
     print("listing!")
-    projects_data = read_projects_data()
+    projects_data = crud.read_projects_data()
     for project in projects_data:
         print(project)
 
@@ -45,7 +47,31 @@ def edit_project(args):
 
 
 def init_project(args):
-    print("init")
+    options = ["tmux", "firefox"]
+    name = args[0]
+    if "-p" in args[1:]:
+        programs = args[args.index("-p") + 1:]
+    else:
+        print(f"Options: [{options}]")
+        programs = input("Which programs would you like to use?\n ").replace(",", " ").split(" ")
+    print(programs)
+    return
+    script_name = input("What would you like to call it?\n\t> ")
+    path = input("Where should it start?\n\t> ")
+    script = ScriptBuilder(script_name)
+    script.tmux_init()
+
+    build_data = script.build()
+    url_queue = build_data["url_queue"]
+    script_string = build_data["script"]
+    project_dir = crud.make_project_dir(build_data["dir_path"])
+    script_path = os.path.join(project_dir, f"{script_name}.sh")
+    if url_queue != []:
+        for item in url_queue:
+            name, url = item
+            crud.write_file(url, os.path.join(project_dir, name))
+    crud.write_file(script_string, script_path)
+    crud.make_exec(script_path)
 
 
 def set_home(args):

@@ -1,9 +1,10 @@
 import os
 import pickle
+import subprocess
 
 
 PROJ_INDEX = "data/data.pickle"
-PROJ_DIR = "projects"
+PROJECTS_DIR = "projects"
 
 
 def read_projects_data() -> dict:
@@ -21,9 +22,9 @@ def write_projects_data(projects_data: dict):
 
 def make_project_dir(name):
     '''Make a new directory for a project and return the realpath.'''
-    dir_path = os.path.join(PROJ_DIR, name)
+    dir_path = os.path.join(PROJECTS_DIR, name)
     # if not os.path.exists(dir_path):
-    os.makedirs(dir_path)
+    os.makedirs(dir_path, exist_ok=False)
     return os.path.realpath(dir_path)
 
 
@@ -33,3 +34,5 @@ def write_file(script: str, path: str):
         file.write(script)
 
 
+def make_exec(file_path: str):
+    subprocess.run(["chmod", "+x", file_path])

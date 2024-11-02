@@ -1,3 +1,4 @@
+import os
 import subprocess
 from crud import write_file
 
@@ -11,16 +12,15 @@ class VarExistsError(Exception):
 
 
 class ScriptBuilder:
-    def __init__(self, name: str, working_dir: str):
+    def __init__(self, name: str):
         self.name = name
-        self.working_dir = working_dir
         self.vars = {}
 
         self.tmux = None
         self.browser = None
         self.url_queue = []
 
-    def tmux_init(self):
+    def tmux_init(self, start_directory: str = "~/"):
         self.tmux = TmuxBuilder(self)
         self.add_var("tx_session", self.name)
 
@@ -28,8 +28,14 @@ class ScriptBuilder:
         self.browser = BrowserBuilder(self, driver=driver, kiosk_mode=kiosk_mode)
 
     def build(self):
+        return {
+                "dir_path": f"{self.name}",
+                "url_queue": self.url_queue,
+                "script": self.to_string()
+                }
+        os.makedirs(f"projects/{self.name}", exist_ok=False)
         if self.url_queue != []:
-            self.write_url_queue()
+            self.get_url_queue()
         return self.to_string()
 
     def to_string(self):
@@ -61,7 +67,7 @@ class ScriptBuilder:
     def add_to_url_queue(self, var_name: str, url: str):
         self.url_queue.append((var_name, url))
 
-    def write_url_queue(self):
+    def get_url_queue(self):
         for item in self.url_queue:
             name, url = item
             write_file(url, f"projects/{self.name}/{name}")
@@ -178,8 +184,9 @@ class TmuxBuilder:
         for target, command in self.command_queue:
             string += self.__run_command(command, target=target)
         string += "\n"
-        string += self.__select_window(self.windows[0]["name"])
-        string += self.__select_pane(0)
+        if len(self.windows) > 0:
+            string += self.__select_window(self.windows[0]["name"])
+            string += self.__select_pane(0)
         string += self.__attach_session(prefix="\t", suffix="\n")
         string += CLOSE_BRACE
         return string
@@ -222,10 +229,6 @@ class TmuxBuilder:
             return f"\ttmux send-keys -t {target} '{command}' C-m\n"
         else:
             return f"\ttmux send-keys '{command}' C-m\n"
-
-
-def make_exec(fpath: str):
-    subprocess.run(["chmod", "+x", fpath])
 
 
 if __name__ == "__main__":
