@@ -1,6 +1,7 @@
 import os
 import crud
 from scripts import ScriptBuilder
+import printing
 import shutil
 import subprocess
 from sys import argv
@@ -25,9 +26,7 @@ def main():
 
 def list_projects(args):
     print("listing!")
-    projects_data = crud.read_projects_data()
-    for project in projects_data:
-        print(project)
+    printing.print_projects_list()
 
 
 def add_project(args):
