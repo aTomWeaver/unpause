@@ -1,6 +1,14 @@
+def message(key):
+    print(MSGS[key])
+
+
 def projects_list(projects_data, with_paths: False):
     if with_paths:
-        for project in projects_data.values():
+        for project in projects_data.items():
+            name, data = project
+            print(f"{name}:\t{data["path"]}")
+    else:
+        for project in projects_data:
             print(project)
 
 
@@ -21,11 +29,11 @@ def no_path(path):
 
 def project_name_exists(name):
     print(f"Name '{name}' exists in projects.")
-    print("Please use a unique name.")
+    print("Please use a unique name.\n")
 
 
 def project_added_successfully(name):
-    print(f"'{name}' added to projects.")
+    print(f"'{name}' added to projects.\n")
 
 
 USAGE = {
@@ -34,5 +42,5 @@ USAGE = {
         }
 
 MSGS = {
-        "proj_add_successful": ""
+        "no_data": "No projects exists yet.\n",
         }

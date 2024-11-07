@@ -6,6 +6,7 @@ import subprocess
 PROJ_INDEX = "data/data.pickle"
 PROJECTS_DIR = "projects"
 
+
 def add_project(name, path):
     projects_data = read_projects_data()
     if name in projects_data:
@@ -19,6 +20,8 @@ def add_project(name, path):
 
 def read_projects_data() -> dict:
     '''Read project data and return it as a dict.'''
+    if not os.path.exists(PROJ_INDEX):
+        write_projects_data({})
     with open(PROJ_INDEX, 'rb') as file:
         projects_data = pickle.load(file)
     return projects_data

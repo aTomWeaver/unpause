@@ -25,9 +25,16 @@ def main():
 
 
 def list_projects(args):
-    print("Current Projects:\n")
+    if len(args) > 0 and args[0] == "-p":
+        with_paths = True
+    else:
+        with_paths = False
     projects_data = crud.read_projects_data()
-    print_.projects_list(projects_data)
+    if not projects_data:
+        print_.message("no_data")
+        return
+    print("Current Projects:\n")
+    print_.projects_list(projects_data, with_paths=with_paths)
 
 
 def add_project(args):
