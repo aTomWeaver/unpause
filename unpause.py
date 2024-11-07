@@ -1,7 +1,7 @@
 import os
 import crud
 from scripts import ScriptBuilder
-import printing
+import print_
 import shutil
 import subprocess
 from sys import argv
@@ -9,7 +9,7 @@ from sys import argv
 
 def main():
     if len(argv) < 2:
-        print("no args")
+        print_.usage()
         return
     else:
         command = argv[1]
@@ -19,18 +19,29 @@ def main():
             args = []
     if command not in CMDS:
         print(f"\"{command}\" not in commands.\n")
-        print_usage()
+        print_.usage()
     else:
         CMDS[command](args)
 
 
 def list_projects(args):
-    print("listing!")
-    printing.print_projects_list()
+    print("Current Projects:\n")
+    projects_data = crud.read_projects_data()
+    print_.projects_list(projects_data)
 
 
 def add_project(args):
-    print("adding project!")
+    if len(args) < 2:
+        print_.usage("add")
+        return
+    name, path = args[:2]
+    if not os.path.exists(path):
+        print_.no_path(path)
+        return
+    if not crud.add_project(name, path):
+        print_.project_name_exists(name)
+    else:
+        print_.project_added_successfully(name)
 
 
 def remove_project(args):
@@ -75,10 +86,6 @@ def init_project(args):
 
 def set_home(args):
     print("setting home")
-
-
-def print_usage(args):
-    print("Usage: unpause [project-name | command] [args]")
 
 
 CMDS = {

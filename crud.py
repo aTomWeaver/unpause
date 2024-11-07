@@ -6,6 +6,16 @@ import subprocess
 PROJ_INDEX = "data/data.pickle"
 PROJECTS_DIR = "projects"
 
+def add_project(name, path):
+    projects_data = read_projects_data()
+    if name in projects_data:
+        return False
+    projects_data[name] = {
+            "path": path,
+            }
+    write_projects_data(projects_data)
+    return True
+
 
 def read_projects_data() -> dict:
     '''Read project data and return it as a dict.'''
