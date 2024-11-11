@@ -29,6 +29,10 @@ def no_path(path):
     print(f"Path '{path}' does not exist.\n")
 
 
+def no_project(name):
+    print(f"No project named '{name}' found.")
+
+
 def project_name_exists(name):
     print(f"Name '{name}' exists in projects.")
     print("Please use a unique name.\n")
@@ -41,6 +45,7 @@ def project_added_successfully(name):
 USAGE = {
         "app": "Usage: unpause [project-name | command] [args]\n",
         "add": "Usage: unpause add [name] [path/to/script]\n",
+        "remove": "Usage: unpause remove [name]\n",
         }
 
 MSGS = {

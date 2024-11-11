@@ -52,7 +52,17 @@ def add_project(args):
 
 
 def remove_project(args):
-    print("removing")
+    print(args)
+    if len(args) < 1:
+        print_.usage("remove")
+        return
+    project = args[0]
+    projects_data = crud.read_projects_data()
+    if project not in projects_data:
+        print_.no_project(project)
+        return
+    projects_data.pop(project)
+    crud.write_projects_data(projects_data)
 
 
 def update_project(args):
