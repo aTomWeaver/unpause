@@ -3,10 +3,12 @@ def message(key):
 
 
 def projects_list(projects_data, with_paths: False):
+    longest_title = len(max(projects_data.keys(), key=len))
     if with_paths:
         for project in projects_data.items():
             name, data = project
-            print(f"{name}:\t{data["path"]}")
+            spacing = (longest_title - len(name) + 2) * " "
+            print(f"{name}:{spacing}{data["path"]}")
     else:
         for project in projects_data:
             print(project)
