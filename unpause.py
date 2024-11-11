@@ -8,8 +8,7 @@ from sys import argv
 
 
 def main():
-    if len(argv) < 2:
-        print_.usage()
+    if not enough_args(argv, "", 2):
         return
     else:
         command = argv[1]
@@ -38,8 +37,7 @@ def list_projects(args):
 
 
 def add_project(args):
-    if len(args) < 2:
-        print_.usage("add")
+    if not enough_args(args, "add", 2):
         return
     name, path = args[:2]
     if not os.path.exists(path):
@@ -52,9 +50,7 @@ def add_project(args):
 
 
 def remove_project(args):
-    print(args)
-    if len(args) < 1:
-        print_.usage("remove")
+    if not enough_args(args, "remove", 1):
         return
     project = args[0]
     projects_data = crud.read_projects_data()
@@ -103,6 +99,13 @@ def init_project(args):
 
 def set_home(args):
     print("setting home")
+
+
+def enough_args(args, fn, min_len):
+    if len(args) < min_len:
+        print_.usage(fn)
+        return False
+    return True
 
 
 CMDS = {

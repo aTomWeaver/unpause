@@ -25,6 +25,13 @@ def usage(arg=""):
         print(USAGE[arg])
 
 
+def check_args(args, fn, min_len):
+    if len(args) < min_len:
+        usage(fn)
+        return False
+    return True
+
+
 def no_path(path):
     print(f"Path '{path}' does not exist.\n")
 
