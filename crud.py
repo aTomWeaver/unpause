@@ -7,6 +7,20 @@ PROJ_INDEX = "data/data.pickle"
 PROJECTS_DIR = "projects"
 
 
+# data schema
+ps = {
+        "project_name": {
+            "entry_point": "entry_point.sh",
+            "files": {
+                "entry_point.sh": "text content_of_entry_point_script",
+                "name_of_file.txt": "text content_of_file",
+                "name_of_file2.txt": "text content_of_file2",
+                "name_of_file3.txt": "text content_of_file3",
+                }
+            }
+        }
+
+
 def add_project(name, path):
     projects_data = read_projects_data()
     if name in projects_data:
@@ -49,3 +63,14 @@ def write_file(script: str, path: str):
 
 def make_exec(file_path: str):
     subprocess.run(["chmod", "+x", file_path])
+
+
+def cache_all():
+    project_dirs = os.listdir(os.path.realpath(PROJECTS_DIR))
+    for pdir in project_dirs:
+        print(pdir)
+
+
+if __name__ == "__main__":
+    cache_all()
+    print(read_projects_data())
