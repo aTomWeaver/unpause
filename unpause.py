@@ -17,7 +17,8 @@ def main():
         else:
             args = []
     if command not in CMDS:
-        print(f"\"{command}\" not in commands.\n")
+        print(f"'{command}' not in projects and is not a recognized command.")
+        print("\n")
         print_.usage()
     else:
         CMDS[command](args)
