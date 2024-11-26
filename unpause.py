@@ -82,6 +82,23 @@ def init_project(args):
     return
     script_name = input("What would you like to call it?\n\t> ")
     path = input("Where should it start?\n\t> ")
+CMDS = {
+        "list": list_projects,
+        "l": list_projects,
+        "ls": list_projects,
+        "add": add_project,
+        "a": add_project,
+        "remove": remove_project,
+        "rm": remove_project,
+        "r": remove_project,
+        "update": update_project,
+        "u": update_project,
+        "edit": edit_project,
+        "e": edit_project,
+        "init": init_project,
+        "i": init_project,
+        "set-home": set_home,
+        }
     script = ScriptBuilder(script_name)
     script.tmux_init()
 

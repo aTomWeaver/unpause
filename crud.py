@@ -21,14 +21,16 @@ ps = {
         }
 
 
-def add_project(name, path):
+def add_project(name, path, files={}):
     projects_data = read_projects_data()
     if name in projects_data:
         return False
     projects_data[name] = {
-            "path": path,
+            "entry_point": path,
+            "files": files
             }
     write_projects_data(projects_data)
+    cache_all()
     return True
 
 
