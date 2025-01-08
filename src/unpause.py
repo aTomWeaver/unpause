@@ -2,8 +2,8 @@ import os
 import crud
 from scripts import ScriptBuilder
 import print_
-import shutil
-import subprocess
+# import shutil
+# import subprocess
 from sys import argv
 
 
@@ -72,6 +72,9 @@ def edit_project(args):
 
 def init_project(args):
     options = ["tmux", "firefox"]
+    if not args:
+        print_.usage("init")
+        return
     name = args[0]
     if "-p" in args[1:]:
         programs = args[args.index("-p") + 1:]
@@ -79,26 +82,9 @@ def init_project(args):
         print(f"Options: [{options}]")
         programs = input("Which programs would you like to use?\n ").replace(",", " ").split(" ")
     print(programs)
-    return
+    # return
     script_name = input("What would you like to call it?\n\t> ")
     path = input("Where should it start?\n\t> ")
-CMDS = {
-        "list": list_projects,
-        "l": list_projects,
-        "ls": list_projects,
-        "add": add_project,
-        "a": add_project,
-        "remove": remove_project,
-        "rm": remove_project,
-        "r": remove_project,
-        "update": update_project,
-        "u": update_project,
-        "edit": edit_project,
-        "e": edit_project,
-        "init": init_project,
-        "i": init_project,
-        "set-home": set_home,
-        }
     script = ScriptBuilder(script_name)
     script.tmux_init()
 

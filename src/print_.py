@@ -46,6 +46,7 @@ USAGE = {
         "app": "Usage: unpause [project-name | command] [args]\n",
         "add": "Usage: unpause add [name] [path/to/script]\n",
         "remove": "Usage: unpause remove [name]\n",
+        "init": "Usage: unpause init []\n",
         }
 
 MSGS = {
